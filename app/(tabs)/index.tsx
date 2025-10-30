@@ -1,38 +1,50 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
-  ImageBackground,
-  Alert,
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  Alert,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useRouter } from "expo-router";
-import { useGetAirtimeAccountBalanceQuery, useGetAirtimeAllQuery } from "~/store/api/airtimeApi";
-
+import { useFocusEffect, useRouter } from "expo-router";
+import {
+  useGetAirtimeAccountBalanceQuery,
+  useGetAirtimeAllQuery,
+} from "~/store/api/airtimeApi";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 const formatter = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
 });
 
+type RootStackParamList = {
+  tiempoAire: { from?: string };
+};
+
+
 export default function TiempoAireScreen() {
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
+  const route = useRoute<RouteProp<RootStackParamList, "tiempoAire">>();
 
-  // ✅ Hooks RTK Query
-  const { data: airtimeBalance, isFetching: loadingBalance, refetch: refetchBalance } =
-    useGetAirtimeAccountBalanceQuery();
+  const {
+    data: airtimeBalance,
+    isFetching: loadingBalance,
+    refetch: refetchBalance,
+  } = useGetAirtimeAccountBalanceQuery();
 
-  const { data: airtimeTransactions, isFetching: loadingTransactions, refetch: refetchTransactions } =
-    useGetAirtimeAllQuery();
+  const {
+    data: airtimeTransactions,
+    isFetching: loadingTransactions,
+    refetch: refetchTransactions,
+  } = useGetAirtimeAllQuery();
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
@@ -43,6 +55,18 @@ export default function TiempoAireScreen() {
     refetchBalance();
     refetchTransactions();
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.from === "product") {
+        refetchBalance();
+        refetchTransactions();
+      }
+    }, [route.params])
+  );
+
+  console.log(airtimeBalance);
+  
 
   const renderTransaction = ({ item }: any) => (
     <View className="mb-6">
@@ -83,9 +107,17 @@ export default function TiempoAireScreen() {
             </View>
           </View>
 
-          <Text className="text-gray-900 font-semibold">
-            {formatter.format(t.amount)}
-          </Text>
+          <View className="flex-col">
+            <Text className="text-base font-medium">${t.amount.toFixed(2)}</Text>
+
+            {t.response_code === "00" &&
+              t.earning != null &&
+              !isNaN(Number(t.earning)) && (
+                <Text className="text-green-500 text-sm font-semibold">
+                  +${Number(t.earning).toFixed(2)}
+                </Text>
+              )}
+          </View>
         </TouchableOpacity>
       ))}
     </View>
@@ -98,6 +130,9 @@ export default function TiempoAireScreen() {
   };
 
   const groupedTransactions = airtimeTransactions?.data?.grouped_transactions || [];
+
+  const stp = airtimeBalance?.data?.stp || "—";
+  const siteId = airtimeBalance?.data?.siteId || "—";
 
   return (
     <View className="flex-1 bg-white">
@@ -112,78 +147,34 @@ export default function TiempoAireScreen() {
             {formatter.format(airtimeBalance?.data?.availableBalance || 0)}
           </Text>
 
-          <View className="flex flex-row justify-between items-center mt-2">
-            <Text className="text-white">
-              ID: #{airtimeBalance?.data?.siteId || "—"}
-            </Text>
+          <View className="mt-3">
+            <TouchableOpacity
+              onPress={() => copyToClipboard(siteId.toString())}
+              className="flex-row items-center gap-2 mb-1"
+            >
+              <Text className="text-white font-medium text-sm">
+                ID: #{siteId}
+              </Text>
+              <Ionicons name="copy-outline" size={13} color="white" />
+            </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex flex-row items-center"
-              onPress={() => setModalVisible(true)}
+              onPress={() => copyToClipboard(stp)}
+              className="flex-row items-center gap-2"
             >
-              <Text className="text-white font-bold mr-1">Depositar</Text>
-              <Ionicons name="chevron-forward" size={18} color="white" />
+              <Text className="text-white font-medium text-sm">
+                STP: {stp}
+              </Text>
+              <Ionicons name="copy-outline" size={13} color="white" />
             </TouchableOpacity>
           </View>
         </ImageBackground>
       </SafeAreaView>
 
-      {/* Modal de depósito */}
-      <Modal transparent visible={modalVisible} animationType="fade">
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="bg-white p-6 rounded-t-2xl pb-12">
-            <Text className="text-lg font-bold mb-4">Información Bancaria</Text>
-
-            <View className="flex flex-row justify-between items-center mb-4">
-              <View>
-                <Text className="text-gray-700 font-semibold">CLABE</Text>
-                <Text className="text-gray-900">
-                  {airtimeBalance?.data?.stp || "646180279900528289"}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() =>
-                  copyToClipboard(airtimeBalance?.data?.stp || "646180279900528289")
-                }
-                className="bg-purple-700 px-4 py-2 rounded-lg ml-4"
-              >
-                <Text className="text-white font-semibold">Copiar</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View className="flex flex-row justify-between items-center mb-12">
-              <View>
-                <Text className="text-gray-700 font-semibold">Concepto</Text>
-                <Text className="text-gray-900">
-                  {airtimeBalance?.data?.siteId || "—"}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => copyToClipboard(airtimeBalance?.data?.siteId?.toString() || "")}
-                className="bg-purple-700 px-4 py-2 rounded-lg ml-4"
-              >
-                <Text className="text-white font-semibold">Copiar</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="bg-purple-700 py-3 rounded-lg"
-            >
-              <Text className="text-center text-white font-semibold text-lg">
-                Cerrar
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Cuerpo */}
       <View className="flex-1 px-6 pt-4 bg-white rounded-t-2xl -mt-4">
-        {/* Ganancias */}
         <View className="bg-main rounded-xl p-4 mb-6 overflow-hidden">
           <View>
-            <Text className="text-white font-semibold mb-1">Ganancias</Text>
+            <Text className="text-white font-semibold mb-1">Ganancias hoy</Text>
             <Text className="text-3xl text-white font-bold mb-2">
               {formatter.format(commissions.earnings_today || 0)}
             </Text>
@@ -216,7 +207,6 @@ export default function TiempoAireScreen() {
           />
         </View>
 
-        {/* Lista de movimientos */}
         {loadingTransactions ? (
           <ActivityIndicator color="#6924ff" size="large" />
         ) : groupedTransactions.length > 0 ? (

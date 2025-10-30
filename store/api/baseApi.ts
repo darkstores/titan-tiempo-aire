@@ -9,8 +9,8 @@ import type { RootState } from "../index";
 
 
 export const baseQuery = fetchBaseQuery({
-    // baseUrl: "https://apierp.familiatitan.com/",
-    baseUrl: 'http://192.168.5.38:3000/',
+    baseUrl: "https://apierp.familiatitan.com/",
+    // baseUrl: 'http://192.168.5.38:3000/',
     prepareHeaders: async (headers, { getState }) => {
         const { token } = (getState() as RootState).auth || {};
         // const token_device = await getValueFromStorage("@expo-push-token");
@@ -18,6 +18,7 @@ export const baseQuery = fetchBaseQuery({
         if (token) {
             headers.set("authorization", token);
         }
+        
         // if (token_device) {
         //     headers.set("token_device", token_device);
         // }

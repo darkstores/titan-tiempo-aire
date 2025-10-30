@@ -10,8 +10,26 @@ export const authApi = api.injectEndpoints({
                 body,
             }),
         }),
+        createSmsVerification: builder.mutation<any, { phone: string }>({
+            query: (body) => ({
+                url: "auth/sms/create",
+                method: "POST",
+                body,
+            }),
+        }),
+        validateSmsCode: builder.mutation<any, { phone: string; code: string }>({
+            query: (body) => ({
+                url: "auth/sms/validate",
+                method: "POST",
+                body,
+            }),
+        }),
     }),
     overrideExisting: false,
 });
 
-export const { useLoginMutation } = authApi;
+export const {
+    useLoginMutation,
+    useCreateSmsVerificationMutation,
+    useValidateSmsCodeMutation,
+} = authApi;

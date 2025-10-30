@@ -1,10 +1,50 @@
 // app/_layout.tsx
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
-import { Text, Keyboard, TouchableWithoutFeedback, View } from "react-native";
-import { useEffect } from "react";
-import { Provider } from "react-redux";
-import { store } from "../store";
+import { Text, View, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
+import { Provider, useSelector, useDispatch } from "react-redux";
+import { store, RootState } from "../store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadCredentials } from "../store/loginSlice";
+
+function NavigatorContent() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { token } = useSelector((state: RootState) => state.auth);
+  const [loadingSession, setLoadingSession] = useState(true);
+
+  // Cargar sesión persistida antes de renderizar
+  useEffect(() => {
+    (async () => {
+      const stored = await AsyncStorage.getItem("auth");
+      if (stored) dispatch(loadCredentials(JSON.parse(stored)));
+      setLoadingSession(false);
+    })();
+  }, []);
+
+  // Redirigir solo después de cargar sesión
+  useEffect(() => {
+    if (!loadingSession) {
+      if (token) router.replace("/(tabs)");
+      else router.replace("/welcome" as any);
+    }
+  }, [token, loadingSession]);
+
+  if (loadingSession) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#6b21a8" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -15,31 +55,11 @@ export default function RootLayout() {
     "NotoSans-ExtraLight": require("../assets/fonts/NotoSans-ExtraLight.ttf"),
   });
 
-  const router = useRouter();
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      const isAuthenticated = false;
-      const hasSeenWelcome = false;
- 
-      if (!hasSeenWelcome) router.replace("/welcome" as any);
-      else if (!isAuthenticated) router.replace("/auth" as any);
-      else router.replace("/(tabs)");
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return <Text>Cargando fuentes...</Text>;
-  }
+  if (!fontsLoaded) return <Text>Cargando fuentes...</Text>;
 
   return (
     <Provider store={store}>
-      {/* 🔹 Esto hace que al tocar fuera se cierre el teclado globalmente */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={{ flex: 1 }}>
-          <Stack screenOptions={{ headerShown: false }} />
-        </View>
-      </TouchableWithoutFeedback>
+      <NavigatorContent />
     </Provider>
   );
 }

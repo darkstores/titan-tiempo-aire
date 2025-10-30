@@ -1,42 +1,55 @@
 {
   "expo": {
-    "name": "titan-tiempoaire",
-    "slug": "titan-tiempoaire",
-    "version": "1.0.0",
-    "scheme": "titan-tiempoaire",
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/favicon.png"
+    "name": "Titan Tiempo Aire",
+    "slug": "app-darkstores",
+    "version": "4.0.1",
+    "scheme": "titanttiempoaire",
+    "orientation": "portrait",
+    "icon": "./assets/img/logos/new_logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/img/logos/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6924ff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "plugins": [
       "expo-router",
       "expo-web-browser",
       "expo-font"
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "tsconfigPaths": true
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/81e32d3d-043d-4282-8056-2d776c95d2e3"
     },
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.familiatitan.app",
+      "buildNumber": "1",
+      "backgroundColor": "#FFFFFF",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.familiatitan.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon-main.png",
+        "foregroundImage": "./assets/img/logos/new_logo.png",
         "backgroundColor": "#6924ff"
       }
-    }
+    },
+    "web": {
+      "favicon": "./assets/img/logos/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "81e32d3d-043d-4282-8056-2d776c95d2e3"
+      }
+    },
+    "runtimeVersion": "exposdk:54.0.0",
+    "owner": "darkstores.dev"
   }
 }

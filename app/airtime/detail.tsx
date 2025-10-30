@@ -99,6 +99,12 @@ const AirtimeDetail = () => {
                 <View className="border-t border-gray-200 pt-5">
                     <InfoRow label="Fecha" value={formatDate(detail.created_date)} />
                 </View>
+                {success && detail.earning != null && !isNaN(Number(detail.earning)) && (
+                    <InfoRow
+                        label="Ganancia"
+                        value={formatter.format(Number(detail.earning))}
+                    />
+                )}
             </View>
 
             {/* Button */}

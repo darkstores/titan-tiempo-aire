@@ -11,6 +11,9 @@ import {
     UIManager,
     Modal,
     TextInput,
+    KeyboardAvoidingView,
+    Keyboard,
+    TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
@@ -119,260 +122,270 @@ export default function ProductSelection() {
         flow_type !== "B" ||
         (!isNaN(inputAmount) && inputAmount >= minAmount && inputAmount <= maxAmount);
 
-    const payTotal =
-        flow_type === "B"
-            ? inputAmount + fee
-            : ((selectedItem?.Amount || 0) + fee) || 0;
-
     return (
-        <View className="flex-1 bg-white">
-            {/* Header con número */}
-            <View className="bg-main px-6 pt-8 pb-6">
-                <PhoneInput
-                    value={accountid_phone}
-                    setValue={(val) => dispatch(setAirtimeInformation({ accountid_phone: val }))}
-                />
-            </View>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View className="flex-1 bg-white">
+                    <View className="bg-main px-6 pt-8 pb-6">
+                        <PhoneInput
+                            value={accountid_phone}
+                            setValue={(val) => dispatch(setAirtimeInformation({ accountid_phone: val }))}
+                        />
+                    </View>
 
-            {/* Lista de productos */}
-            <ScrollView className="flex-1 px-6 py-6">
-                <Text className="text-xl font-bold mb-6">Selecciona el monto</Text>
+                    <ScrollView
+                        className="flex-1 px-6 py-6"
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Text className="text-xl font-bold mb-6">Selecciona el monto</Text>
 
-                {isLoading ? (
-                    <ActivityIndicator size="large" color="#6924ff" />
-                ) : (
-                    data?.data?.map((item: any) => {
-                        const isSelected = selectedId === item.ProductId;
-                        const isExpanded = expandedId === item.ProductId;
+                        {isLoading ? (
+                            <ActivityIndicator size="large" color="#6924ff" />
+                        ) : (
+                            data?.data?.map((item: any) => {
+                                const isSelected = selectedId === item.ProductId;
+                                const isExpanded = expandedId === item.ProductId;
 
-                        return (
-                            <TouchableOpacity
-                                key={item.ProductId}
-                                onPress={() => handleSelect(item)}
-                                activeOpacity={0.9}
-                                className={`rounded-2xl border px-5 py-4 mb-4 ${isSelected
-                                        ? "bg-purple-100 border-purple-600"
-                                        : "bg-gray-50 border-gray-200"
-                                    }`}
-                            >
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-row items-center flex-1">
-                                        <Image
-                                            source={{ uri: item.URLImage }}
-                                            style={{ width: 50, height: 50, marginRight: 12 }}
-                                            contentFit="contain"
-                                        />
-                                        <View className="flex-1">
-                                            <Text
-                                                className={`text-base font-semibold ${isSelected ? "text-purple-700" : "text-gray-800"
-                                                    }`}
-                                            >
-                                                {item.ProductName}
-                                            </Text>
-
-                                            {flow_type !== "B" && (
-                                                <Text className="text-gray-600 text-sm mt-1">
-                                                    ${parseFloat(item.Amount).toFixed(2)}
-                                                    {item.Fee > 0 &&
-                                                        ` + Fee $${parseFloat(item.Fee).toFixed(2)}`}
-                                                </Text>
-                                            )}
-                                        </View>
-                                    </View>
-                                    <AntDesign
-                                        name="right"
-                                        size={20}
-                                        color={isSelected ? "#6b21a8" : "#9CA3AF"}
-                                    />
-                                </View>
-
-                                {isExpanded && (
-                                    <View className="mt-4 bg-purple-50 rounded-xl px-4 py-3">
-                                        <Text className="text-purple-800 text-sm text-center mb-2">
-                                            {item.ToolTip}
-                                        </Text>
-
-                                        {flow_type === "B" && (
-                                            <View className="mt-2">
-                                                <Text className="text-gray-700 text-sm mb-1">
-                                                    Ingresa el monto a pagar
-                                                </Text>
-                                                <TextInput
-                                                    value={customAmount}
-                                                    onChangeText={setCustomAmount}
-                                                    keyboardType="numeric"
-                                                    placeholder={`Min ${item.AmountMin} - Max ${item.AmountMax}`}
-                                                    className="border border-gray-300 rounded-lg px-3 py-2 text-base"
+                                return (
+                                    <TouchableOpacity
+                                        key={item.ProductId}
+                                        onPress={() => handleSelect(item)}
+                                        activeOpacity={0.9}
+                                        className={`rounded-2xl border px-5 py-4 mb-4 ${isSelected
+                                                ? "bg-purple-100 border-purple-600"
+                                                : "bg-gray-50 border-gray-200"
+                                            }`}
+                                    >
+                                        <View className="flex-row items-center justify-between">
+                                            <View className="flex-row items-center flex-1">
+                                                <Image
+                                                    source={{ uri: item.URLImage }}
+                                                    style={{ width: 50, height: 50, marginRight: 12 }}
+                                                    contentFit="contain"
                                                 />
-                                                {!isAmountValid && customAmount.length > 0 && (
-                                                    <Text className="text-red-500 text-xs mt-1">
-                                                        El monto debe estar entre ${item.AmountMin} y ${item.AmountMax}
+                                                <View className="flex-1">
+                                                    <Text
+                                                        className={`text-base font-semibold ${isSelected ? "text-purple-700" : "text-gray-800"
+                                                            }`}
+                                                    >
+                                                        {item.ProductName}
                                                     </Text>
-                                                )}
-                                                {item.Fee > 0 && (
-                                                    <Text className="text-gray-500 text-xs mt-2 text-center">
-                                                        Fee adicional: ${parseFloat(item.Fee).toFixed(2)}
-                                                    </Text>
+
+                                                    {flow_type !== "B" && (
+                                                        <Text className="text-gray-600 text-sm mt-1">
+                                                            ${parseFloat(item.Amount).toFixed(2)}
+                                                            {item.Fee > 0 &&
+                                                                ` + Fee $${parseFloat(item.Fee).toFixed(2)}`}
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            </View>
+                                            <AntDesign
+                                                name="right"
+                                                size={20}
+                                                color={isSelected ? "#6b21a8" : "#9CA3AF"}
+                                            />
+                                        </View>
+
+                                        {isExpanded && (
+                                            <View className="mt-4 bg-purple-50 rounded-xl px-4 py-3">
+                                                <Text className="text-purple-800 text-sm text-center mb-2">
+                                                    {item.ToolTip}
+                                                </Text>
+
+                                                {flow_type === "B" && (
+                                                    <View className="mt-2">
+                                                        <Text className="text-gray-700 text-sm mb-1">
+                                                            Ingresa el monto a pagar
+                                                        </Text>
+                                                        <TextInput
+                                                            value={customAmount}
+                                                            onChangeText={setCustomAmount}
+                                                            keyboardType="numeric"
+                                                            placeholder={`Min ${item.AmountMin} - Max ${item.AmountMax}`}
+                                                            className="border border-gray-300 rounded-lg px-3 py-2 text-base"
+                                                        />
+                                                        {!isAmountValid && customAmount.length > 0 && (
+                                                            <Text className="text-red-500 text-xs mt-1">
+                                                                El monto debe estar entre ${item.AmountMin} y $
+                                                                {item.AmountMax}
+                                                            </Text>
+                                                        )}
+                                                        {item.Fee > 0 && (
+                                                            <Text className="text-gray-500 text-xs mt-2 text-center">
+                                                                Fee adicional: ${parseFloat(item.Fee).toFixed(2)}
+                                                            </Text>
+                                                        )}
+                                                    </View>
                                                 )}
                                             </View>
                                         )}
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })
-                )}
-            </ScrollView>
-
-            {/* ✅ Modal con progress bar */}
-            <Modal transparent visible={modalVisible} animationType="fade">
-                <View className="flex-1 bg-black/50 justify-center items-center px-8">
-                    <View className="bg-white w-full rounded-2xl p-6 items-center">
-                        {isLoadingModal ? (
-                            <>
-                                <Text className="text-lg font-semibold text-gray-800 text-center mb-6">
-                                    Realizando recarga de {carrier_name}
-                                </Text>
-                                <View className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-6">
-                                    <Animated.View
-                                        style={{
-                                            height: "100%",
-                                            width: progressWidth,
-                                            borderRadius: 6,
-                                            backgroundColor: "#6b21a8",
-                                        }}
-                                    />
-                                </View>
-                                <Text className="text-sm text-gray-500 text-center">
-                                    Este proceso puede tardar un momento...
-                                </Text>
-                            </>
-                        ) : modalMessage.includes("✅") ? (
-                            <>
-                                <Text className="text-center text-lg font-semibold text-green-700 mb-6">
-                                    Recarga exitosa
-                                </Text>
-                                <Text className="text-gray-700 text-center mb-6">{modalMessage}</Text>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setModalVisible(false);
-                                        router.replace("/");
-                                    }}
-                                    className="bg-green-600 rounded-xl px-6 py-3"
-                                >
-                                    <Text className="text-white text-base font-bold text-center">
-                                        Regresar al inicio
-                                    </Text>
-                                </TouchableOpacity>
-                            </>
-                        ) : (
-                            <>
-                                <Text className="text-center text-lg font-semibold text-gray-800 mb-6">
-                                    {modalMessage}
-                                </Text>
-                                <View className="flex-row justify-between w-full">
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setModalVisible(false);
-                                            router.replace("/");
-                                        }}
-                                        className="flex-1 bg-purple-700 rounded-xl px-4 py-3 mr-2"
-                                    >
-                                        <Text className="text-white text-base font-bold text-center">
-                                            Regresar al inicio
-                                        </Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setModalVisible(false);
-                                            setIsLoadingModal(false);
-                                            setModalMessage("");
-                                        }}
-                                        className="flex-1 bg-gray-300 rounded-xl px-4 py-3 ml-2"
-                                    >
-                                        <Text className="text-gray-800 text-base font-bold text-center">
-                                            Reintentar
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
+                                );
+                            })
                         )}
-                    </View>
-                </View>
-            </Modal>
+                    </ScrollView>
 
-            {/* ✅ Footer con desglose bonito */}
-            <View className="px-6 pb-6 bg-white border-t border-gray-200">
-                <TouchableOpacity
-                    disabled={
-                        !selectedId ||
-                        !isValidAccount ||
-                        (flow_type === "B" && (!customAmount || !isAmountValid))
-                    }
-                    onPress={async () => {
-                        if (!selectedId || !isValidAccount) return;
+                    <View className="px-6 pb-6 bg-white ">
+                        <TouchableOpacity
+                            disabled={
+                                !selectedId ||
+                                !isValidAccount ||
+                                (flow_type === "B" && (!customAmount || !isAmountValid))
+                            }
+                            onPress={async () => {
+                                if (!selectedId || !isValidAccount) return;
+                                const selected = data?.data?.find(
+                                    (x: any) => x.ProductId === selectedId
+                                );
+                                if (!selected) return;
 
-                        const selected = data?.data?.find(
-                            (x: any) => x.ProductId === selectedId
-                        );
-                        if (!selected) return;
+                                setModalVisible(true);
+                                setIsLoadingModal(true);
 
-                        setModalVisible(true);
-                        setIsLoadingModal(true);
+                                try {
+                                    const body = {
+                                        product_id: selected.ProductId,
+                                        carrier_name,
+                                        product_name: selected.ProductName,
+                                        accountid_phone,
+                                        amount:
+                                            flow_type === "B"
+                                                ? parseFloat(customAmount)
+                                                : parseFloat(selected.Amount),
+                                        fee: parseFloat(selected.Fee || 0),
+                                        flowType: flow_type,
+                                    };
 
-                        try {
-                            const body = {
-                                product_id: selected.ProductId,
-                                carrier_name,
-                                product_name: selected.ProductName,
-                                accountid_phone,
-                                amount:
-                                    flow_type === "B"
-                                        ? parseFloat(customAmount)
-                                        : parseFloat(selected.Amount),
-                                fee: parseFloat(selected.Fee || 0),
-                                flowType: flow_type,
-                            };
-
-                            const res: any = await createAirtime(body).unwrap();
-
-                            setTimeout(() => {
-                                setIsLoadingModal(false);
-                                if (res?.status) {
-                                    setModalMessage("✅ Recarga completada correctamente");
-                                } else {
-                                    setModalMessage(res?.message || "Error al completar la recarga");
+                                    const res: any = await createAirtime(body).unwrap();
+                                    setTimeout(() => {
+                                        setIsLoadingModal(false);
+                                        if (res?.status) {
+                                            setModalMessage("✅ Recarga completada correctamente");
+                                        } else {
+                                            setModalMessage(
+                                                res?.message || "Error al completar la recarga"
+                                            );
+                                        }
+                                    }, 1500);
+                                } catch (err) {
+                                    console.error("❌ Error al procesar recarga:", err);
+                                    setIsLoadingModal(false);
+                                    setModalMessage("Error al procesar recarga");
                                 }
-                            }, 1500);
-                        } catch (err) {
-                            console.error("❌ Error al procesar recarga:", err);
-                            setIsLoadingModal(false);
-                            setModalMessage("Error al procesar recarga");
-                        }
-                    }}
-                    className={`py-4 rounded-xl ${selectedId &&
-                            isValidAccount &&
-                            (flow_type !== "B" || (customAmount && isAmountValid))
-                            ? "bg-purple-700"
-                            : "bg-gray-400"
-                        }`}
-                >
-                    <Text className="text-center text-white text-lg font-bold">
-                        {selectedId ? (() => {
-                            const amount =
-                                flow_type === "B"
-                                    ? parseFloat(customAmount || "0")
-                                    : parseFloat(selectedItem?.Amount || "0");
-                            const fee = parseFloat(selectedItem?.Fee || "0");
-                            const total = amount + fee;
+                            }}
+                            className={`py-4 rounded-xl ${selectedId &&
+                                    isValidAccount &&
+                                    (flow_type !== "B" || (customAmount && isAmountValid))
+                                    ? "bg-purple-700"
+                                    : "bg-gray-400"
+                                }`}
+                        >
+                            <Text className="text-center text-white text-lg font-bold">
+                                {selectedId
+                                    ? (() => {
+                                        const amount =
+                                            flow_type === "B"
+                                                ? parseFloat(customAmount || "0")
+                                                : parseFloat(selectedItem?.Amount || "0");
+                                        const fee = parseFloat(selectedItem?.Fee || "0");
+                                        const total = amount + fee;
 
-                            return fee > 0
-                                ? `Completar $${amount.toFixed(2)} + $${fee.toFixed(2)} = $${total.toFixed(2)}`
-                                : `Completar $${amount.toFixed(2)}`;
-                        })() : "Selecciona un producto"}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                                        return fee > 0
+                                            ? `Completar $${amount.toFixed(2)} + $${fee.toFixed(
+                                                2
+                                            )} = $${total.toFixed(2)}`
+                                            : `Completar $${amount.toFixed(2)}`;
+                                    })()
+                                    : "Selecciona un producto"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <Modal transparent visible={modalVisible} animationType="fade">
+                        <View className="flex-1 bg-black/50 justify-center items-center px-8">
+                            <View className="bg-white w-full rounded-2xl p-6 items-center">
+                                {isLoadingModal ? (
+                                    <>
+                                        <Text className="text-lg font-semibold text-gray-800 text-center mb-6">
+                                            Realizando recarga de {carrier_name}
+                                        </Text>
+                                        <View className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-6">
+                                            <Animated.View
+                                                style={{
+                                                    height: "100%",
+                                                    width: progressWidth,
+                                                    borderRadius: 6,
+                                                    backgroundColor: "#6b21a8",
+                                                }}
+                                            />
+                                        </View>
+                                        <Text className="text-sm text-gray-500 text-center">
+                                            Este proceso puede tardar un momento...
+                                        </Text>
+                                    </>
+                                ) : modalMessage.includes("✅") ? (
+                                    <>
+                                        <Text className="text-center text-lg font-semibold text-green-700 mb-6">
+                                            Recarga exitosa
+                                        </Text>
+                                        <Text className="text-gray-700 text-center mb-6">
+                                            {modalMessage}
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setModalVisible(false);
+                                                router.replace("/");
+                                            }}
+                                            className="bg-green-600 rounded-xl px-6 py-3"
+                                        >
+                                            <Text className="text-white text-base font-bold text-center">
+                                                Regresar al inicio
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text className="text-center text-lg font-semibold text-gray-800 mb-6">
+                                            {modalMessage}
+                                        </Text>
+                                        <View className="flex-row justify-between w-full">
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setModalVisible(false);
+                                                    router.replace("/");
+                                                }}
+                                                className="flex-1 bg-purple-700 rounded-xl px-4 py-3 mr-2"
+                                            >
+                                                <Text className="text-white text-base font-bold text-center">
+                                                    Regresar al inicio
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setModalVisible(false);
+                                                    setIsLoadingModal(false);
+                                                    setModalMessage("");
+                                                }}
+                                                className="flex-1 bg-gray-300 rounded-xl px-4 py-3 ml-2"
+                                            >
+                                                <Text className="text-gray-800 text-base font-bold text-center">
+                                                    Reintentar
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </>
+                                )}
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 }
